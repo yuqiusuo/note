@@ -1,3 +1,5 @@
+>《ECMAScript 6 入门》读书笔记
+
 - 数组的扩展
 
   1. Array.from(arr,function)：将两类对象转为真正的数组，类似数组的对象和可遍历的对象

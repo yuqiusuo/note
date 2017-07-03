@@ -1,3 +1,5 @@
+> 《ECMAScript 6 入门》读书笔记
+
 - String
 
   1. includes(str,n) : 返回布尔值，表示是否找到了参数字符串

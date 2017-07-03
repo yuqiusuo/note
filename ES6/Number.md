@@ -1,3 +1,5 @@
+> 《ECMAScript 6 入门》读书笔记
+
 - Number
 
   1. 二进制和八进制表示法
@@ -126,16 +128,16 @@
 
   10. Math.sign()：判断一个数到底是正数、负数、还是零
 
-      ```javascript
-      //返回值:正数(+1)/负数(-1)/0(0)/-0(-0)/其他值(NaN)
-      Math.sign(-5) //-1
-      Math.sign(5) //+1
-      Math.sign(0) //+0
-      Math.sign(-0) //-0
-      Math.sign(NaN) //NaN
-      Math.sign('foo')//NaN
-      Math.sign() //NaN
-      ```
+     ```javascript
+     //返回值:正数(+1)/负数(-1)/0(0)/-0(-0)/其他值(NaN)
+     Math.sign(-5) //-1
+     Math.sign(5) //+1
+     Math.sign(0) //+0
+     Math.sign(-0) //-0
+     Math.sign(NaN) //NaN
+     Math.sign('foo')//NaN
+     Math.sign() //NaN
+     ```
 
   11. Math.cbrt()：计算一个数的立方根
 
