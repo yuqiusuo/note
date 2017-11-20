@@ -148,12 +148,12 @@
             var length = arguments.length; // 获取参数的数量
             if (length < 2 || obj == null) return obj; // 如果参数的数量小于2或者传入的对象为null，直接返回传入的对象
             for (var index = 1; index < length; index++) {
-                var source = arguments[index],
-                    keys = keysFunc(source),
-                    l = keys.length;
+                var source = arguments[index], // 获取当前参数
+                    keys = keysFunc(source), // 获取当前参数的keys
+                    l = keys.length; // 获取当前参数key的长度
                 for (var i = 0; i < l; i++) {
-                    var key = keys[i];
-                    if (!undefinedOnly || obj[key] === void 0) obj[key] = source[key];
+                    var key = keys[i]; // 获取当前key
+                    if (!undefinedOnly || obj[key] === void 0) obj[key] = source[key]; // 进行obj的key值操作
                 }
             }
             return obj;
@@ -174,6 +174,7 @@
         return result; // 4. 返回创建的新实例
     };
 
+    // 该参数用于获取一个对象的key值
     var property = function(key) {
         return function(obj) {
             return obj == null ? void 0 : obj[key];
@@ -185,7 +186,9 @@
     // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
     // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
     var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
-    var getLength = property('length');
+    var getLength = property('length'); // 获取length属性的方法暂存
+    // 类似组: 拥有 length 属性并且 length 属性值为 Number 类型的元素，例如数组、arguments、HTMLCollection以及NodeList等
+    // 判断是否为类数组
     var isArrayLike = function(collection) {
         var length = getLength(collection);
         return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
@@ -198,13 +201,17 @@
     // Handles raw objects in addition to array-likes. Treats all
     // sparse array-likes as if they were dense.
     _.each = _.forEach = function(obj, iteratee, context) {
+        // 处理迭代函数iteratee，如果没有context，则直接使用iteratee作为函数遍历，否则迭代函数将以当前值、当前索引、完整集合作为参数进行调用
         iteratee = optimizeCb(iteratee, context);
         var i, length;
+        // 判断是否为类函数
         if (isArrayLike(obj)) {
+            // 如果为类数组，遍历每个位置
             for (i = 0, length = obj.length; i < length; i++) {
                 iteratee(obj[i], i, obj);
             }
         } else {
+            // 如果不是类数组，遍历每个键值对
             var keys = _.keys(obj);
             for (i = 0, length = keys.length; i < length; i++) {
                 iteratee(obj[keys[i]], keys[i], obj);
@@ -215,11 +222,14 @@
 
     // Return the results of applying the iteratee to each element.
     _.map = _.collect = function(obj, iteratee, context) {
+        // 处理迭代函数iteratee，如果iteratee是函数，则用optimizeCb处理
         iteratee = cb(iteratee, context);
+        // 如果是类数组对象，获取keys、length，创建一个length长度的数组
         var keys = !isArrayLike(obj) && _.keys(obj),
             length = (keys || obj).length,
             results = Array(length);
         for (var index = 0; index < length; index++) {
+            // 判断当前的键或者index，循环执行函数
             var currentKey = keys ? keys[index] : index;
             results[index] = iteratee(obj[currentKey], currentKey, obj);
         }
@@ -227,23 +237,32 @@
     };
 
     // Create a reducing function iterating left or right.
+    /**
+     *  _.reduce()和 _.reduceRight()依赖函数，dir用于区分两个函数
+     * @param {*} dir 
+     */
     function createReduce(dir) {
         // Optimized iterator function as using arguments.length
         // in the main function will deoptimize the, see #1991.
+        // 定义迭代器函数
         function iterator(obj, iteratee, memo, keys, index, length) {
+            // 遍历index至length之间的元素，执行迭代方法
             for (; index >= 0 && index < length; index += dir) {
                 var currentKey = keys ? keys[index] : index;
+                // 每次迭代，memo都为新的结果
                 memo = iteratee(memo, obj[currentKey], currentKey, obj);
             }
             return memo;
         }
 
         return function(obj, iteratee, memo, context) {
+            // 处理迭代方法，生成新的迭代函数
             iteratee = optimizeCb(iteratee, context, 4);
             var keys = !isArrayLike(obj) && _.keys(obj),
                 length = (keys || obj).length,
-                index = dir > 0 ? 0 : length - 1;
+                index = dir > 0 ? 0 : length - 1; // index表示遍历方向(左/右)
             // Determine the initial value if none is provided.
+            // 如果没有初始值，先确定初始值
             if (arguments.length < 3) {
                 memo = obj[keys ? keys[index] : index];
                 index += dir;
@@ -260,13 +279,21 @@
     _.reduceRight = _.foldr = createReduce(-1);
 
     // Return the first value which passes a truth test. Aliased as `detect`.
+    // find别名detect
+    /**
+     * @param predicate 迭代函数
+     */
     _.find = _.detect = function(obj, predicate, context) {
         var key;
+        // 判断是否为类函数
         if (isArrayLike(obj)) {
+            // 如果是类函数，则调用findIndex寻找index
             key = _.findIndex(obj, predicate, context);
         } else {
+            // 否则通过findKey寻找key值
             key = _.findKey(obj, predicate, context);
         }
+        // 如果找到，返回该值，找不到这返回undefined
         if (key !== void 0 && key !== -1) return obj[key];
     };
 
