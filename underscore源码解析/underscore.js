@@ -43,53 +43,68 @@
         nativeCreate = Object.create;
 
     // Naked function reference for surrogate-prototype-swapping.
+    // 1. 用于代理原型转换的空函数，用法详见baseCreate
+    // 2. 和baseCreate组合在一起看，他们主要是为了解决Object.create()的浏览器兼容性，
+    //    因为原型是无法直接实例化的，因此通过先创建一个空对象Ctor，然后将其原型指向我
+    //    们想要实例化的原型，最后返回该原型
     var Ctor = function() {};
 
     // Create a safe reference to the Underscore object for use below.
+    // 初始化，为_对象创建一个安全的引用
     var _ = function(obj) {
-        if (obj instanceof _) return obj;
-        if (!(this instanceof _)) return new _(obj);
-        this._wrapped = obj;
+        if (obj instanceof _) return obj; // 如果参数obj是underscore的一个实例，则直接返回该参数
+        if (!(this instanceof _)) return new _(obj); // 实例化
+        this._wrapped = obj; // 保存该参数
     };
 
     // Export the Underscore object for **Node.js**, with
     // backwards-compatibility for the old `require()` API. If we're in
     // the browser, add `_` as a global object.
+    // 以下一段代码是为了在NODE环境下，将underscore作为一个模块使用，将_暴露到全局
     if (typeof exports !== 'undefined') {
         if (typeof module !== 'undefined' && module.exports) {
             exports = module.exports = _;
         }
         exports._ = _;
     } else {
-        root._ = _;
+        root._ = _; // 如果在浏览器下，则暴露给window对象
     }
 
-    // Current version.
+    // Current version. 版本号
     _.VERSION = '1.8.3';
 
     // Internal function that returns an efficient (for current engines) version
-    // of the passed-in callback, to be repeatedly applied in other Underscore
-    // functions.
+    // of the passed-in callback, to be repeatedly applied in other Underscore functions.
+    // underscore中有大量的回调函数，它对于回调函数做了一定的处理
+    /**
+     * optimizeCb对于传入的函数做了一层封装，用于更好地重复调用，保证this传递的正确
+     * @param {*} func      需要处理的函数
+     * @param {*} context   函数的上下文(this)
+     * @param {*} argCount  参数的数量
+     */
     var optimizeCb = function(func, context, argCount) {
+        // void 0是undefined的一种表现形式,可以避免undefined被重写，如果未传入上下文，则直接返回函数
         if (context === void 0) return func;
+        // 当未传入参数数量时，按参数数量为3处理
         switch (argCount == null ? 3 : argCount) {
             case 1:
-                return function(value) {
+                return function(value) { // 一个参数，只需要传递当前值
                     return func.call(context, value);
                 };
             case 2:
-                return function(value, other) {
+                return function(value, other) { // 两个参数，传递值、索引、其他参数
                     return func.call(context, value, other);
                 };
             case 3:
-                return function(value, index, collection) {
+                return function(value, index, collection) { // 3个参数，值、索引、整个集合
                     return func.call(context, value, index, collection);
                 };
             case 4:
-                return function(accumulator, value, index, collection) {
+                return function(accumulator, value, index, collection) { // 4个参数，累计值、当前值、索引、整个集合
                     return func.call(context, accumulator, value, index, collection);
                 };
         }
+        // 如果不是上面的条件，直接调用传入函数
         return function() {
             return func.apply(context, arguments);
         };
@@ -98,21 +113,40 @@
     // A mostly-internal function to generate callbacks that can be applied
     // to each element in a collection, returning the desired result — either
     // identity, an arbitrary callback, a property matcher, or a property accessor.
+    // 翻译：一个基本的内部函数，用于生成可以应用于集合中的每个元素的回调函数，返回所需的结果——要么是标识，
+    //      要么是任意回调，要么是属性匹配器，要么是属性访问器。
+    /**
+     * 针对集合迭代的回调处理
+     * @param {*} value     当前值
+     * @param {*} context   上下文
+     * @param {*} argCount  参数数量
+     */
     var cb = function(value, context, argCount) {
-        if (value == null) return _.identity;
-        if (_.isFunction(value)) return optimizeCb(value, context, argCount);
-        if (_.isObject(value)) return _.matcher(value);
-        return _.property(value);
+        if (value == null) return _.identity; // 如果没传value，则返回等价的自身
+        if (_.isFunction(value)) return optimizeCb(value, context, argCount); // 如果value是一个函数，返回该函数的回调
+        if (_.isObject(value)) return _.matcher(value); // 如果value是对象，寻找匹配的属性值
+        return _.property(value); // 如果都不是，返回相应的属性访问器
     };
+
+    /**
+     * 默认的迭代器，认为参数的数量是无穷的，调用cb
+     * @param {*} value 
+     * @param {*} context 
+     */
     _.iteratee = function(value, context) {
         return cb(value, context, Infinity);
     };
 
     // An internal function for creating assigner functions.
+    // 翻译: 用于创建分配函数的内部函数
+    // 此函数为很典型的闭包，该函数与3个方法有关联:
+    // _.extend() = createAssigner(_.allKeys)
+    // _.extendOwn() = createAssigner(_.keys)
+    // _.defaults() = createAssigner(_.allKeys, true)
     var createAssigner = function(keysFunc, undefinedOnly) {
         return function(obj) {
-            var length = arguments.length;
-            if (length < 2 || obj == null) return obj;
+            var length = arguments.length; // 获取参数的数量
+            if (length < 2 || obj == null) return obj; // 如果参数的数量小于2或者传入的对象为null，直接返回传入的对象
             for (var index = 1; index < length; index++) {
                 var source = arguments[index],
                     keys = keysFunc(source),
@@ -127,13 +161,17 @@
     };
 
     // An internal function for creating a new object that inherits from another.
+    // 创建新对象的内部函数，该对象继承自另一个对象
     var baseCreate = function(prototype) {
+        // 如果参数不是对象，则返回空对象
         if (!_.isObject(prototype)) return {};
+        // 如果支持Object.create()方法，则返回Object.create()方法创建的原型对象
         if (nativeCreate) return nativeCreate(prototype);
-        Ctor.prototype = prototype;
-        var result = new Ctor;
-        Ctor.prototype = null;
-        return result;
+        // 如果浏览器不支持Object.create()方法，执行以下步骤:
+        Ctor.prototype = prototype; // 1. 将传入的原型赋值给Ctor
+        var result = new Ctor; // 2. 创建一个新的Ctor实例
+        Ctor.prototype = null; // 3. 恢复Ctor以备下次使用
+        return result; // 4. 返回创建的新实例
     };
 
     var property = function(key) {
