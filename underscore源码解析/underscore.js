@@ -299,9 +299,14 @@
 
     // Return all the elements that pass a truth test.
     // Aliased as `select`.
+    /**
+     * @param predicate 过滤函数
+     */
     _.filter = _.select = function(obj, predicate, context) {
-        var results = [];
+        var results = []; // 定义一个空结果数组
+        // 通过cb和optimizeCb处理过滤函数
         predicate = cb(predicate, context);
+        // each过滤每一个值，通过的push进结果数组
         _.each(obj, function(value, index, list) {
             if (predicate(value, index, list)) results.push(value);
         });
@@ -309,6 +314,7 @@
     };
 
     // Return all the elements for which a truth test fails.
+    // _.negate: 返回一个新的predicate函数的否定版本
     _.reject = function(obj, predicate, context) {
         return _.filter(obj, _.negate(cb(predicate)), context);
     };
@@ -316,10 +322,13 @@
     // Determine whether all of the elements match a truth test.
     // Aliased as `all`.
     _.every = _.all = function(obj, predicate, context) {
+        // 处理过滤函数
         predicate = cb(predicate, context);
+        // 判断对象是否为类数组对象，如果是，获取所有key值
         var keys = !isArrayLike(obj) && _.keys(obj),
             length = (keys || obj).length;
         for (var index = 0; index < length; index++) {
+            // 遍历数组元素，如果有一个值不通过过滤函数，返回false
             var currentKey = keys ? keys[index] : index;
             if (!predicate(obj[currentKey], currentKey, obj)) return false;
         }
@@ -328,6 +337,7 @@
 
     // Determine if at least one element in the object matches a truth test.
     // Aliased as `any`.
+    // 同_.every，如果有一个值通过过滤函数，返回true
     _.some = _.any = function(obj, predicate, context) {
         predicate = cb(predicate, context);
         var keys = !isArrayLike(obj) && _.keys(obj),
@@ -342,8 +352,11 @@
     // Determine if the array or object contains a given item (using `===`).
     // Aliased as `includes` and `include`.
     _.contains = _.includes = _.include = function(obj, item, fromIndex, guard) {
+        // 如果obj是类数组对象，提取obj的值组成一个新的数组
         if (!isArrayLike(obj)) obj = _.values(obj);
+        // 查找起始位置确定
         if (typeof fromIndex != 'number' || guard) fromIndex = 0;
+        // 利用_.indexOf 确定查找的值在数组中的位置，如果位置>=0则表示存在该值
         return _.indexOf(obj, item, fromIndex) >= 0;
     };
 
@@ -729,24 +742,37 @@
     };
 
     // Generator function to create the indexOf and lastIndexOf functions
+    /**
+     * 
+     * @param {*} dir 区分_.indexOf 和 _.lastIndexOf
+     * @param {*} predicateFind _.findIndex || _.findLastIndex
+     * @param {*} sortedIndex _.sortedIndex(list, value, [iteratee], [context]) 
+     *              使用二分查找确定value在list中的位置序号
+     */
     function createIndexFinder(dir, predicateFind, sortedIndex) {
         return function(array, item, idx) {
             var i = 0,
-                length = getLength(array);
+                length = getLength(array); // 获取传入数组的长度
+            // 校验传入的起始位置的参数是否为数值
             if (typeof idx == 'number') {
+                // 确定起始位置
                 if (dir > 0) {
                     i = idx >= 0 ? idx : Math.max(idx + length, i);
                 } else {
                     length = idx >= 0 ? Math.min(idx + 1, length) : idx + length + 1;
                 }
             } else if (sortedIndex && idx && length) {
+                // 如果idx不是数值，则在array中直接寻找item
                 idx = sortedIndex(array, item);
+                // 再次校验item是否在array中，如果在，返回index
                 return array[idx] === item ? idx : -1;
             }
+            // 处理item是NaN的情况
             if (item !== item) {
                 idx = predicateFind(slice.call(array, i, length), _.isNaN);
                 return idx >= 0 ? idx + i : -1;
             }
+            // 常规流程，遍历i到length之间的元素，找出需要的元素，返回index
             for (idx = dir > 0 ? i : length - 1; idx >= 0 && idx < length; idx += dir) {
                 if (array[idx] === item) return idx;
             }
