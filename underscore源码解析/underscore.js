@@ -361,39 +361,53 @@
     };
 
     // Invoke a method (with arguments) on every item in a collection.
+    // 在list的每个元素上执行method方法
     _.invoke = function(obj, method) {
+        // 提取arguments
         var args = slice.call(arguments, 2);
-        var isFunc = _.isFunction(method);
+        var isFunc = _.isFunction(method); // 判断传入的method是不是方法
+        // 遍历obj中的值。针对每一个值都做一个处理
         return _.map(obj, function(value) {
+            // 如果method是方法，在用方法处理每个值，否则用value原型下的method方法处理每个值
             var func = isFunc ? method : value[method];
+            // 如果func不存在，直接返回func，存在的话调用改方法处理每个值
             return func == null ? func : func.apply(value, args);
         });
     };
 
     // Convenience version of a common use case of `map`: fetching a property.
+    // map简化版本  萃取对象数组中的某个属性时，返回一个数组
     _.pluck = function(obj, key) {
         return _.map(obj, _.property(key));
     };
 
     // Convenience version of a common use case of `filter`: selecting only objects
     // containing specific `key:value` pairs.
+    // 遍历list中的每一个值，返回一个数组，这个数组包含包含properties所列出的属性的所有的键 - 值对
+    // _.where([{a: 1, b: 2}, {b: 2, c: 3}], {a: 1}); => [{a: 1,b: 2}]
     _.where = function(obj, attrs) {
         return _.filter(obj, _.matcher(attrs));
     };
 
     // Convenience version of a common use case of `find`: getting the first object
     // containing specific `key:value` pairs.
+    // 与_.where类似，但是只返回第一个值
     _.findWhere = function(obj, attrs) {
         return _.find(obj, _.matcher(attrs));
     };
 
     // Return the maximum element (or element-based computation).
+    // 返回list中的最大值，list为空则返回-Infinity
     _.max = function(obj, iteratee, context) {
+        // 初始化定义为list为空的情况
         var result = -Infinity,
             lastComputed = -Infinity,
             value, computed;
+        // 判断list存在但迭代函数不存在的情况
         if (iteratee == null && obj != null) {
+            // 确定obj是否为类数组对象，不是这提取obj的值数组
             obj = isArrayLike(obj) ? obj : _.values(obj);
+            // 冒泡取得最大值
             for (var i = 0, length = obj.length; i < length; i++) {
                 value = obj[i];
                 if (value > result) {
@@ -401,9 +415,13 @@
                 }
             }
         } else {
+            // 处理迭代函数
             iteratee = cb(iteratee, context);
+            // 迭代函数对每个值进行处理
             _.each(obj, function(value, index, list) {
+                // 每次获取一个新的结果值
                 computed = iteratee(value, index, list);
+                // 与前一次作比较，如果当前值更大，则结果为当前对象，保存当前对象的结果值
                 if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
                     result = value;
                     lastComputed = computed;
@@ -414,6 +432,7 @@
     };
 
     // Return the minimum element (or element-based computation).
+    // 与_.max 一致
     _.min = function(obj, iteratee, context) {
         var result = Infinity,
             lastComputed = Infinity,
@@ -441,12 +460,16 @@
 
     // Shuffle a collection, using the modern version of the
     // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
+    // 生成一个乱序的list
     _.shuffle = function(obj) {
+        // 判断是否为类数组对象，不是则提取obj的值组成数组
         var set = isArrayLike(obj) ? obj : _.values(obj);
         var length = set.length;
-        var shuffled = Array(length);
+        var shuffled = Array(length); // 创建一个等长的数组
         for (var index = 0, rand; index < length; index++) {
+            // 随机取一个index
             rand = _.random(0, index);
+            // 将新生成的shuffled数组打乱，感觉此处的处理挺巧妙的！
             if (rand !== index) shuffled[index] = shuffled[rand];
             shuffled[rand] = set[index];
         }
@@ -456,11 +479,19 @@
     // Sample **n** random values from a collection.
     // If **n** is not specified, returns a single random element.
     // The internal `guard` argument allows it to work with `map`.
+    /**
+     * 生成一个乱序的数组，可以指定数组长度
+     * @param {*} obj 
+     * @param {*} n 指定长度
+     * @param {*} guard 
+     */
     _.sample = function(obj, n, guard) {
+        // 如果没有设置长度n，或者guard设置为true，随机返回一个数值
         if (n == null || guard) {
             if (!isArrayLike(obj)) obj = _.values(obj);
             return obj[_.random(obj.length - 1)];
         }
+        // 先生成一个随机数组，然后截出指定长度的数组
         return _.shuffle(obj).slice(0, Math.max(0, n));
     };
 
