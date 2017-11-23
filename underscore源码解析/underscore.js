@@ -496,8 +496,13 @@
     };
 
     // Sort the object's values by a criterion produced by an iteratee.
+    // 返回一个排序后的list拷贝副本
     _.sortBy = function(obj, iteratee, context) {
+        // 处理迭代函数
         iteratee = cb(iteratee, context);
+        // 1.用_.map针对每个对象用迭代函数生成一个值
+        // 2.用_.sort利用1中生成的值进行排序
+        // 3.针对_.sort生成的数组，提取value(即原传入list中的值)生成结果
         return _.pluck(_.map(obj, function(value, index, list) {
             return {
                 value: value,
@@ -516,12 +521,19 @@
     };
 
     // An internal function used for aggregate "group by" operations.
+    // _.groupBy内部函数
     var group = function(behavior) {
+        // 返回一个闭包
         return function(obj, iteratee, context) {
+            // 先定义一个空对象用于存储结果
             var result = {};
+            // 处理迭代函数
             iteratee = cb(iteratee, context);
+            // 针对每一个值进行处理
             _.each(obj, function(value, index) {
+                // 用用户定义的迭代函数处理每个对象
                 var key = iteratee(value, index, obj);
+                // 调用上一层函数(如_.groupBy)传入的处理函数
                 behavior(result, value, key);
             });
             return result;
@@ -530,26 +542,35 @@
 
     // Groups the object's values by a criterion. Pass either a string attribute
     // to group by, or a function that returns the criterion.
+    // 把一个集合分组为多个集合，通过 iterator 返回的结果进行分组
     _.groupBy = group(function(result, value, key) {
+        // 判断result中是否有key对应的键值
+        // 如果有，key针对的键值用塞入value
         if (_.has(result, key)) result[key].push(value);
+        // 否则新建一个属性存储该键值
         else result[key] = [value];
     });
 
     // Indexes the object's values by a criterion, similar to `groupBy`, but for
     // when you know that your index values will be unique.
+    // 给定一个list，和 一个用来返回一个在列表中的每个元素键 的iterator 函数（或属性名）， 返回一个每一项索引的对象
     _.indexBy = group(function(result, value, key) {
+        // 直接用value当做key保存value
         result[key] = value;
     });
 
     // Counts instances of an object that group by a certain criterion. Pass
-    // either a string attribute to count by, or a function that returns the
-    // criterion.
+    // either a string attribute to count by, or a function that returns thecriterion.
+    // 排序一个列表组成一个组，并且返回各组中的对象的数量的计数
     _.countBy = group(function(result, value, key) {
+        // 如果存在该value的key，+1
         if (_.has(result, key)) result[key]++;
+        // 否则新建一个key值
         else result[key] = 1;
     });
 
     // Safely create a real, live array from anything iterable.
+    // 把list(任何可以迭代的对象)转换成一个数组
     _.toArray = function(obj) {
         if (!obj) return [];
         if (_.isArray(obj)) return slice.call(obj);
