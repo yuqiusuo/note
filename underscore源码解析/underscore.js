@@ -572,6 +572,7 @@
     // Safely create a real, live array from anything iterable.
     // 把list(任何可以迭代的对象)转换成一个数组
     _.toArray = function(obj) {
+        // 
         if (!obj) return [];
         if (_.isArray(obj)) return slice.call(obj);
         if (isArrayLike(obj)) return _.map(obj, _.identity);
