@@ -655,13 +655,18 @@
 
     // Internal implementation of a recursive `flatten` function.
     var flatten = function(input, shallow, strict, startIndex) {
+        // 定义输出数组，index
         var output = [],
             idx = 0;
         for (var i = startIndex || 0, length = getLength(input); i < length; i++) {
+            // 获取数组每个值
             var value = input[i];
+            // 判断是否为类数组
             if (isArrayLike(value) && (_.isArray(value) || _.isArguments(value))) {
                 //flatten current level of array or arguments object
+                // 如果是类数组且设置shallow为true，递归调用flatten
                 if (!shallow) value = flatten(value, shallow, strict);
+                // 将value塞入到output中
                 var j = 0,
                     len = value.length;
                 output.length += len;
@@ -669,6 +674,7 @@
                     output[idx++] = value[j++];
                 }
             } else if (!strict) {
+                // 单个值直接塞入output
                 output[idx++] = value;
             }
         }
@@ -676,11 +682,14 @@
     };
 
     // Flatten out an array, either recursively (by default), or just one level.
+    // 将一个嵌套多层的数组 array（数组） (嵌套可以是任何层数)转换为只有一层的数组。 
+    // 如果你传递 shallow参数，数组将只减少一维的嵌套。
     _.flatten = function(array, shallow) {
         return flatten(array, shallow, false);
     };
 
     // Return a version of the array that does not contain the specified value(s).
+    // 返回一个删除所有values值后的 array副本。
     _.without = function(array) {
         return _.difference(array, slice.call(arguments, 1));
     };
@@ -739,8 +748,11 @@
 
     // Take the difference between one array and a number of other arrays.
     // Only the elements present in just the first array will remain.
+    // 类似于without，但返回的值来自array参数数组，并且不存在于other 数组.
     _.difference = function(array) {
+        // 将参数合并成一个一维数组
         var rest = flatten(arguments, true, true, 1);
+        // 找出存在于合并数组但不在第后续参数中的值
         return _.filter(array, function(value) {
             return !_.contains(rest, value);
         });
