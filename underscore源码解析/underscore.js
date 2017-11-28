@@ -572,25 +572,32 @@
     // Safely create a real, live array from anything iterable.
     // 把list(任何可以迭代的对象)转换成一个数组
     _.toArray = function(obj) {
-        // 
         if (!obj) return [];
+        // 如果传入一个数组对象，则直接slice处理成数组
         if (_.isArray(obj)) return slice.call(obj);
+        // 如果传入一个类数组对象，则直接slice处理成数组
         if (isArrayLike(obj)) return _.map(obj, _.identity);
+        // 否则直接返回obj值生成的数组
         return _.values(obj);
     };
 
     // Return the number of elements in an object.
     _.size = function(obj) {
+        // null 则返回0
         if (obj == null) return 0;
+        // 类数组则返回length，否则看谁对象key的数量
         return isArrayLike(obj) ? obj.length : _.keys(obj).length;
     };
 
     // Split a collection into two arrays: one whose elements all satisfy the given
     // predicate, and one whose elements all do not satisfy the predicate.
+    // 拆分一个数组（array）为两个数组：  第一个数组其元素都满足predicate迭代函数， 而第二个的所有元素均不能满足
     _.partition = function(obj, predicate, context) {
+        // 先处理过滤函数
         predicate = cb(predicate, context);
         var pass = [],
             fail = [];
+        // 针对每一个对象做处理，通过过滤函数的push进pass数组，否则push进fail数组
         _.each(obj, function(value, key, obj) {
             (predicate(value, key, obj) ? pass : fail).push(value);
         });
@@ -603,8 +610,11 @@
     // Get the first element of an array. Passing **n** will return the first N
     // values in the array. Aliased as `head` and `take`. The **guard** check
     // allows it to work with `_.map`.
+    // 返回array（数组）的第一个元素，传递 n参数将返回数组中从第一个元素开始的n个元素
     _.first = _.head = _.take = function(array, n, guard) {
+        // null返回undefined
         if (array == null) return void 0;
+        // n为null则返回第一个，n这返回前n个
         if (n == null || guard) return array[0];
         return _.initial(array, array.length - n);
     };
@@ -612,12 +622,16 @@
     // Returns everything but the last entry of the array. Especially useful on
     // the arguments object. Passing **n** will return all the values in
     // the array, excluding the last N.
+    // 返回数组中除了最后一个元素外的其他全部元素，传递 n参数将从结果中排除从最后一个开始的n个元素
     _.initial = function(array, n, guard) {
+        // 利用slice截取数组
         return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
     };
 
     // Get the last element of an array. Passing **n** will return the last N
     // values in the array.
+    // 返回array（数组）的最后一个元素。传递 n参数将返回数组中从最后一个元素开始的n个元素
+    // 同_.first
     _.last = function(array, n, guard) {
         if (array == null) return void 0;
         if (n == null || guard) return array[array.length - 1];
@@ -627,11 +641,14 @@
     // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
     // Especially useful on the arguments object. Passing an **n** will return
     // the rest N values in the array.
+    // 返回数组中除了第一个元素外的其他全部元素。传递 index 参数将返回从index开始的剩余所有元素 。
+    // 同_.initial
     _.rest = _.tail = _.drop = function(array, n, guard) {
         return slice.call(array, n == null || guard ? 1 : n);
     };
 
     // Trim out all falsy values from an array.
+    // 返回一个除去所有false值的 array副本。 在javascript中, false, null, 0, "", undefined 和 NaN 都是false值.
     _.compact = function(array) {
         return _.filter(array, _.identity);
     };
