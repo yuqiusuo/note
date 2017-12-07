@@ -697,27 +697,38 @@
     // Produce a duplicate-free version of the array. If the array has already
     // been sorted, you have the option of using a faster algorithm.
     // Aliased as `unique`.
+    // 返回 array去重后的副本，如果您确定 array 已经排序, 那么给 isSorted 参数传递 true值, 此函数将运行的更快的算法. 
+    // 如果要处理对象元素, 传递 iteratee函数来获取要对比的属性.
     _.uniq = _.unique = function(array, isSorted, iteratee, context) {
+        // 首先判断是否有序，如果isSorted不是bool值，等于false
         if (!_.isBoolean(isSorted)) {
             context = iteratee;
             iteratee = isSorted;
             isSorted = false;
         }
+
         if (iteratee != null) iteratee = cb(iteratee, context);
         var result = [];
         var seen = [];
+        // 遍历数组
         for (var i = 0, length = getLength(array); i < length; i++) {
+            // 获取当前值，如果存在iteratee则用它取得计算值，否则直接用当前索引对应的值
             var value = array[i],
                 computed = iteratee ? iteratee(value, i, array) : value;
+
             if (isSorted) {
+                // 如果是第一个值，或者上一个计算值不等于当前计算值则直接加入当前值
                 if (!i || seen !== computed) result.push(value);
                 seen = computed;
             } else if (iteratee) {
+                // 如果有iteratee
                 if (!_.contains(seen, computed)) {
+                    // 如果已看过的值中没有当前计算值，没有的话push进result
                     seen.push(computed);
                     result.push(value);
                 }
             } else if (!_.contains(result, value)) {
+                // 否则直接判断结果中是否有当前值
                 result.push(value);
             }
         }
@@ -726,21 +737,32 @@
 
     // Produce an array that contains the union: each distinct element from all of
     // the passed-in arrays.
+    // 先将所有的参数平整化，然后再唯一化
     _.union = function() {
         return _.uniq(flatten(arguments, true, true));
     };
 
     // Produce an array that contains every item shared between all the
     // passed-in arrays.
+    // 返回传入 arrays（数组）交集。结果中的每个值是存在于传入的每个arrays（数组）里。
+    /**
+     * @param {*[]} array 第一个数组，因为是取交集，只要找出第一个数组中存在于其他数组中的元素即可 
+     */
     _.intersection = function(array) {
+        // 定义一个结果数组
         var result = [];
+        // 获取arguments的长度
         var argsLength = arguments.length;
+        // 遍历第一个数组array
         for (var i = 0, length = getLength(array); i < length; i++) {
             var item = array[i];
+            // 首先判断当前元素在结果中是否存在，存在则跳过
             if (_.contains(result, item)) continue;
+            // 遍历arguments,如果当前元素不存在于某一个数组中,跳过
             for (var j = 1; j < argsLength; j++) {
                 if (!_.contains(arguments[j], item)) break;
             }
+            // 如果所有的arguments都遍历完了,将当前数组push到结果数组中
             if (j === argsLength) result.push(item);
         }
         return result;
@@ -760,12 +782,15 @@
 
     // Zip together multiple lists into a single array -- elements that share
     // an index go together.
+    // 将每个arrays中相应位置的值合并在一起。
     _.zip = function() {
+        // 针对arguments执行_.unzip
         return _.unzip(arguments);
     };
 
     // Complement of _.zip. Unzip accepts an array of arrays and groups
     // each array's elements on shared indices
+    // 给定若干arrays，返回一串联的新数组，其第一元素个包含所有的输入数组的第一元素，其第二包含了所有的第二元素，依此类推
     _.unzip = function(array) {
         var length = array && _.max(array, getLength).length || 0;
         var result = Array(length);
