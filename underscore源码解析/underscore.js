@@ -792,9 +792,11 @@
     // each array's elements on shared indices
     // 给定若干arrays，返回一串联的新数组，其第一元素个包含所有的输入数组的第一元素，其第二包含了所有的第二元素，依此类推
     _.unzip = function(array) {
+        // 获取最长的数组的长度
         var length = array && _.max(array, getLength).length || 0;
         var result = Array(length);
 
+        // 萃取每个数组中第index个元素组成数组
         for (var index = 0; index < length; index++) {
             result[index] = _.pluck(array, index);
         }
@@ -804,12 +806,17 @@
     // Converts lists into objects. Pass either a single array of `[key, value]`
     // pairs, or two parallel arrays of the same length -- one of keys, and one of
     // the corresponding values.
+    // 将数组转换为对象。传递任何一个单独[key, value]对的列表，或者一个键的列表和一个值的列表。 如果存在重复键，最后一个值将被返回。
     _.object = function(list, values) {
+        // 定义结果空数组
         var result = {};
+        // 遍历每个list
         for (var i = 0, length = getLength(list); i < length; i++) {
+            // 如果有values参数，表示前一个数组为键，后一个数组为值，一一对应
             if (values) {
                 result[list[i]] = values[i];
             } else {
+                // 否则，将每个数组转换为对象的键值，第一个数据为键，第二个为值
                 result[list[i][0]] = list[i][1];
             }
         }
@@ -817,12 +824,19 @@
     };
 
     // Generator function to create the findIndex and findLastIndex functions
+    // _.findIndex 和 _.findLastIndex 的底层函数
     function createPredicateIndexFinder(dir) {
+        // 闭包,返回一个函数
         return function(array, predicate, context) {
+            // 处理迭代函数
             predicate = cb(predicate, context);
+            // 获取数组长度
             var length = getLength(array);
+            // 判断顺序或者倒序
             var index = dir > 0 ? 0 : length - 1;
+            // 遍历数组
             for (; index >= 0 && index < length; index += dir) {
+                // 如果校验通过,返回index
                 if (predicate(array[index], index, array)) return index;
             }
             return -1;
@@ -830,13 +844,18 @@
     }
 
     // Returns the first index on an array-like that passes a predicate test
+    // 类似于_.indexOf，当predicate通过真检查时，返回第一个索引值；否则返回-1
     _.findIndex = createPredicateIndexFinder(1);
+    // 和_.findIndex类似，但反向迭代数组，当predicate通过真检查时，最接近末端的索引值将被返回
     _.findLastIndex = createPredicateIndexFinder(-1);
 
     // Use a comparator function to figure out the smallest index at which
     // an object should be inserted so as to maintain order. Uses binary search.
+    // 使用二分查找确定value在list中的位置序号，value按此序号插入能保持list原有的排序
     _.sortedIndex = function(array, obj, iteratee, context) {
+        // 处理迭代函数
         iteratee = cb(iteratee, context, 1);
+
         var value = iteratee(obj);
         var low = 0,
             high = getLength(array);
