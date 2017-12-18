@@ -979,11 +979,15 @@
 
     // Bind a number of an object's methods to that object. Remaining arguments
     // are the method names to be bound. Useful for ensuring that all callbacks
-    // defined on an object belong to it.
+    // defined on an object belong to it.  
+    // 把methodNames参数指定的一些方法绑定到object上，这些方法就会在对象的上下文环境中执行。 
     _.bindAll = function(obj) {
+        // 定义变量，获取参数的长度
         var i, length = arguments.length,
             key;
+        // 参数必须为两个个或以上
         if (length <= 1) throw new Error('bindAll must be passed function names');
+        // 遍历绑定
         for (i = 1; i < length; i++) {
             key = arguments[i];
             obj[key] = _.bind(obj[key], obj);
@@ -992,19 +996,28 @@
     };
 
     // Memoize an expensive function by storing its results.
+    // Memoizes方法可以缓存某函数的计算结果。
     _.memoize = function(func, hasher) {
+        // 闭包
         var memoize = function(key) {
+            // 获取cache
             var cache = memoize.cache;
+            // 如果传入函数hasher，则利用hasher计算出缓存值
             var address = '' + (hasher ? hasher.apply(this, arguments) : key);
+            // 如果cache中没有缓存的该值，则通过func计算出来
             if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
+            // 返回缓存的值
             return cache[address];
         };
+        // 初始化cache
         memoize.cache = {};
+        // 返回闭包
         return memoize;
     };
 
     // Delays a function for the given number of milliseconds, and then calls
     // it with the arguments supplied.
+    // 类似setTimeout，等待wait毫秒后调用function。
     _.delay = function(func, wait) {
         var args = slice.call(arguments, 2);
         return setTimeout(function() {
@@ -1014,6 +1027,7 @@
 
     // Defers a function, scheduling it to run after the current call stack has
     // cleared.
+    // 延迟调用function直到当前调用栈清空为止，类似使用延时为0的setTimeout方法。
     _.defer = _.partial(_.delay, _, 1);
 
     // Returns a function, that, when invoked, will only be triggered at most once
@@ -1021,34 +1035,53 @@
     // as much as it can, without ever going more than once per `wait` duration;
     // but if you'd like to disable the execution on the leading edge, pass
     // `{leading: false}`. To disable execution on the trailing edge, ditto.
+    // 创建并返回一个像节流阀一样的函数，当重复调用函数的时候，至少每隔 wait毫秒调用一次该函数。
     _.throttle = function(func, wait, options) {
-        var context, args, result;
-        var timeout = null;
-        var previous = 0;
+        // 定义变量及初始化
+        var context, args, result; // context: 上下文/ args: 参数 / result: 结果，及调用func
+        var timeout = null; // 调用间隔时间
+        var previous = 0; // 上一次调用时间
         if (!options) options = {};
+        // 调用func
         var later = function() {
+            // 调用时，previous清零或者等于此时
             previous = options.leading === false ? 0 : _.now();
+            // 清除间隔时间
             timeout = null;
+            // 调用func方法
             result = func.apply(context, args);
+            // 置空上下文和参数
             if (!timeout) context = args = null;
         };
+        // 返回闭包
         return function() {
+            // 获得当前时间
             var now = _.now();
+            // 保存previous
             if (!previous && options.leading === false) previous = now;
+            // 计算等待了多久(等待时间)
             var remaining = wait - (now - previous);
+            // 记录上下文和参数
             context = this;
             args = arguments;
+            // 初次和等待时间超过wait时触发func
             if (remaining <= 0 || remaining > wait) {
+                // 清空timeout
                 if (timeout) {
                     clearTimeout(timeout);
                     timeout = null;
                 }
+                // 保存previous
                 previous = now;
+                // 调用result
                 result = func.apply(context, args);
+                // 清空上下文和参数
                 if (!timeout) context = args = null;
             } else if (!timeout && options.trailing !== false) {
+                // 等待remaining时间再触发
                 timeout = setTimeout(later, remaining);
             }
+            // 返回闭包
             return result;
         };
     };
@@ -1057,29 +1090,41 @@
     // be triggered. The function will be called after it stops being called for
     // N milliseconds. If `immediate` is passed, trigger the function on the
     // leading edge, instead of the trailing.
+    // 返回 function 函数的防反跳版本, 将延迟函数的执行(真正的执行)在函数最后一次调用时刻的 wait 毫秒之后.
     _.debounce = function(func, wait, immediate) {
+        // 定义变量
         var timeout, args, context, timestamp, result;
 
+        // later及待执行的函数
         var later = function() {
+            // 判断还有多久执行
             var last = _.now() - timestamp;
 
             if (last < wait && last >= 0) {
+                // 未到时间，延迟
                 timeout = setTimeout(later, wait - last);
             } else {
+                // 清空时间戳
                 timeout = null;
                 if (!immediate) {
+                    // 创建result函数
                     result = func.apply(context, args);
+                    // 清空上下文和参数
                     if (!timeout) context = args = null;
                 }
             }
         };
 
         return function() {
+            // 保存上下文和参数、时间戳
             context = this;
             args = arguments;
             timestamp = _.now();
+            // 判断是否立即执行
             var callNow = immediate && !timeout;
+            // 如果timeout不存在，定时执行later函数
             if (!timeout) timeout = setTimeout(later, wait);
+            // 如果立即执行，则创建result函数，重置上下文和参数
             if (callNow) {
                 result = func.apply(context, args);
                 context = args = null;
@@ -1092,12 +1137,16 @@
     // Returns the first function passed as an argument to the second,
     // allowing you to adjust arguments, run code before and after, and
     // conditionally execute the original function.
+    // 将第一个函数 function 封装到函数 wrapper 里面, 并把函数 function 作为第一个参数传给 wrapper. 
+    // 这样可以让 wrapper 在 function 运行之前和之后 执行代码, 调整参数然后附有条件地执行.
     _.wrap = function(func, wrapper) {
         return _.partial(wrapper, func);
     };
 
     // Returns a negated version of the passed-in predicate.
+    // 返回一个新的predicate函数的否定版本。
     _.negate = function(predicate) {
+        // 闭包
         return function() {
             return !predicate.apply(this, arguments);
         };
@@ -1105,20 +1154,28 @@
 
     // Returns a function that is the composition of a list of functions, each
     // consuming the return value of the function that follows.
+    // 返回函数集 functions 组合后的复合函数, 也就是一个函数执行完之后把返回的结果再作为参数赋给下一个函数来执行. 
     _.compose = function() {
+        // 获取arguments
         var args = arguments;
+        // 从倒数第一个函数开始执行
         var start = args.length - 1;
         return function() {
             var i = start;
+            // 执行倒数第一个函数
             var result = args[start].apply(this, arguments);
+            // 把每一段函数执行的结果当做参数传递到下一个函数
             while (i--) result = args[i].call(this, result);
             return result;
         };
     };
 
     // Returns a function that will only be executed on and after the Nth call.
+    // 创建一个函数, 只有在运行了 count 次之后才有效果.
     _.after = function(times, func) {
+        // 闭包
         return function() {
+            // 当执行到最后一次，才触发真正的效果
             if (--times < 1) {
                 return func.apply(this, arguments);
             }
@@ -1126,12 +1183,16 @@
     };
 
     // Returns a function that will only be executed up to (but not including) the Nth call.
+    // 创建一个函数,调用不超过count 次。 当count已经达到时，最后一个函数调用的结果将被记住并返回。
     _.before = function(times, func) {
         var memo;
+        // 返回闭包
         return function() {
+            // 执行times次之前，保存结果
             if (--times > 0) {
                 memo = func.apply(this, arguments);
             }
+            // 次数达到，函数置空，直接返回结果
             if (times <= 1) func = null;
             return memo;
         };
@@ -1139,13 +1200,19 @@
 
     // Returns a function that will be executed at most one time, no matter how
     // often you call it. Useful for lazy initialization.
+    // 创建一个只能调用一次的函数。重复调用改进的方法也没有效果，只会返回第一次执行时的结果。
     _.once = _.partial(_.before, 2);
 
     // Object Functions
     // ----------------
 
     // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
+    // IE < 9 下 不能用 for key in ... 来枚举对象的某些 key
+    // 比如重写了对象的 `toString` 方法，这个 key 值就不能在 IE < 9 下用 for in 枚举到
+    // IE < 9，{toString: null}.propertyIsEnumerable('toString') 返回 false
+    // IE < 9，重写的 `toString` 属性被认为不可枚举
     var hasEnumBug = !{ toString: null }.propertyIsEnumerable('toString');
+    // IE < 9 下不能用 for in 来枚举的 key 值集合
     var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
         'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'
     ];
@@ -1153,14 +1220,21 @@
     function collectNonEnumProps(obj, keys) {
         var nonEnumIdx = nonEnumerableProps.length;
         var constructor = obj.constructor;
+        // proto 是否是继承的 prototype
         var proto = (_.isFunction(constructor) && constructor.prototype) || ObjProto;
 
         // Constructor is a special case.
+        // `constructor` 属性需要特殊处理
+        // 如果 obj 有 `constructor` 这个 key
+        // 并且该 key 没有在 keys 数组中 存入数组
         var prop = 'constructor';
         if (_.has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
 
+        // nonEnumerableProps 数组中的 keys
         while (nonEnumIdx--) {
             prop = nonEnumerableProps[nonEnumIdx];
+            // prop in obj 应该肯定返回 true 吧？是否不必要？
+            // obj[prop] !== proto[prop] 判断该 key 是否来自于原型链
             if (prop in obj && obj[prop] !== proto[prop] && !_.contains(keys, prop)) {
                 keys.push(prop);
             }
@@ -1169,18 +1243,24 @@
 
     // Retrieve the names of an object's own properties.
     // Delegates to **ECMAScript 5**'s native `Object.keys`
+    // 检索object拥有的所有可枚举属性的名称。
     _.keys = function(obj) {
+        // 如果不是对象，返回空对象
         if (!_.isObject(obj)) return [];
+        // 原生Object.keys方法
         if (nativeKeys) return nativeKeys(obj);
         var keys = [];
+        // 遍历obj，push key
         for (var key in obj)
             if (_.has(obj, key)) keys.push(key);
             // Ahem, IE < 9.
+            // 如果存在IE9不兼容的问题，用兼容方法解决
         if (hasEnumBug) collectNonEnumProps(obj, keys);
         return keys;
     };
 
     // Retrieve all the property names of an object.
+    // 检索object拥有的和继承的所有属性的名称。
     _.allKeys = function(obj) {
         if (!_.isObject(obj)) return [];
         var keys = [];
@@ -1191,10 +1271,14 @@
     };
 
     // Retrieve the values of an object's properties.
+    // 返回object对象所有的属性值。
     _.values = function(obj) {
+        // 获取keys集合
         var keys = _.keys(obj);
+        // 根据keys 长度获取一个新数组
         var length = keys.length;
         var values = Array(length);
+        // 遍历获取所有的value
         for (var i = 0; i < length; i++) {
             values[i] = obj[keys[i]];
         }
