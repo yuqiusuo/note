@@ -1287,12 +1287,16 @@
 
     // Returns the results of applying the iteratee to each element of the object
     // In contrast to _.map it returns an object
+    // 它类似于map，但是这用于对象。转换每个属性的值。
     _.mapObject = function(obj, iteratee, context) {
+        // 处理迭代函数
         iteratee = cb(iteratee, context);
+        // 获取传入对象可枚举属性的集合及长度，定义变量，初始化结果对象
         var keys = _.keys(obj),
             length = keys.length,
             results = {},
             currentKey;
+        // 遍历对象，生成对应的迭代后的结果map
         for (var index = 0; index < length; index++) {
             currentKey = keys[index];
             results[currentKey] = iteratee(obj[currentKey], currentKey, obj);
@@ -1301,10 +1305,13 @@
     };
 
     // Convert an object into a list of `[key, value]` pairs.
+    // 把一个对象转变为一个[key, value]形式的数组。
     _.pairs = function(obj) {
+        // 获取传入对象可枚举属性的集合及长度，新建一个同等长度的数组
         var keys = _.keys(obj);
         var length = keys.length;
         var pairs = Array(length);
+        // 遍历，将key-value键值对生成一个新数组存入数组中
         for (var i = 0; i < length; i++) {
             pairs[i] = [keys[i], obj[keys[i]]];
         }
@@ -1312,9 +1319,13 @@
     };
 
     // Invert the keys and values of an object. The values must be serializable.
+    // 返回一个object副本，使其键（keys）和值（values）对换。
     _.invert = function(obj) {
+        // 定义结果数组
         var result = {};
+        // 获取传入对象可枚举属性的集合
         var keys = _.keys(obj);
+        // 遍历对象，将value和key对调
         for (var i = 0, length = keys.length; i < length; i++) {
             result[obj[keys[i]]] = keys[i];
         }
@@ -1323,26 +1334,37 @@
 
     // Return a sorted list of the function names available on the object.
     // Aliased as `methods`
+    // 返回一个对象里所有的方法名
     _.functions = _.methods = function(obj) {
+        // 初始化结果数组
         var names = [];
+        // 遍历obj的属性
         for (var key in obj) {
+            // 如果该属性对应的value是function，保存进names
             if (_.isFunction(obj[key])) names.push(key);
         }
+        // 返回排序后的数组
         return names.sort();
     };
 
     // Extend a given object with all the properties in passed-in object(s).
+    // 复制source对象中的所有属性覆盖到destination对象上，并且返回 destination 对象
     _.extend = createAssigner(_.allKeys);
 
     // Assigns a given object with all the own properties in the passed-in object(s)
     // (https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+    // 类似于 extend, 但只复制自己的属性覆盖到目标对象，不包括继承过来的属性。
     _.extendOwn = _.assign = createAssigner(_.keys);
 
     // Returns the first key on an object that passes a predicate test
+    // 寻找第一个通过校验函数的key
     _.findKey = function(obj, predicate, context) {
+        // 处理校验函数
         predicate = cb(predicate, context);
+        // 获取key数组
         var keys = _.keys(obj),
             key;
+        // 遍历，查找到适合条件的第一个key
         for (var i = 0, length = keys.length; i < length; i++) {
             key = keys[i];
             if (predicate(obj[key], key, obj)) return key;
@@ -1350,72 +1372,103 @@
     };
 
     // Return a copy of the object only containing the whitelisted properties.
+    // 返回一个object副本，只过滤出keys(有效的键组成的数组)参数指定的属性值。
+    // 或者接受一个判断函数，指定挑选哪个key。
     _.pick = function(object, oiteratee, context) {
         var result = {},
             obj = object,
             iteratee, keys;
+        // 如果对象为null，返回空对象
         if (obj == null) return result;
         if (_.isFunction(oiteratee)) {
+            // 如果oiteratee为过滤函数，处理成迭代函数
             keys = _.allKeys(obj);
             iteratee = optimizeCb(oiteratee, context);
         } else {
+            // 如果后面的参数为key名称，提取出来，过滤函数判断obj中售后有该key
             keys = flatten(arguments, false, false, 1);
             iteratee = function(value, key, obj) { return key in obj; };
             obj = Object(obj);
         }
+        // 遍历obj的key
         for (var i = 0, length = keys.length; i < length; i++) {
             var key = keys[i];
             var value = obj[key];
+            // 通过过滤函数的，返回保存key-value到result对象中
             if (iteratee(value, key, obj)) result[key] = value;
         }
         return result;
     };
 
     // Return a copy of the object without the blacklisted properties.
+    // 返回一个object副本，只过滤出除去keys(有效的键组成的数组)参数指定的属性值。 
+    // 或者接受一个判断函数，指定忽略哪个key。
     _.omit = function(obj, iteratee, context) {
         if (_.isFunction(iteratee)) {
+            // 过滤函数为否定版本
             iteratee = _.negate(iteratee);
         } else {
+            // 过滤出参数
             var keys = _.map(flatten(arguments, false, false, 1), String);
+            // 过滤出不包含在参数内的key
             iteratee = function(value, key) {
                 return !_.contains(keys, key);
             };
         }
+        // 利用_.pick选择
         return _.pick(obj, iteratee, context);
     };
 
     // Fill in a given object with default properties.
+    // 用defaults对象填充object 中的undefined属性。
     _.defaults = createAssigner(_.allKeys, true);
 
     // Creates an object that inherits from the given prototype object.
     // If additional properties are provided then they will be added to the
     // created object.
+    // 创建具有给定原型的新对象，可选附加props 作为 own的属性。
     _.create = function(prototype, props) {
+        // 创建新实例
         var result = baseCreate(prototype);
+        // 如果存在额外参数，合并
         if (props) _.extendOwn(result, props);
         return result;
     };
 
     // Create a (shallow-cloned) duplicate of an object.
+    // 创建 一个浅复制（浅拷贝）的克隆object。
     _.clone = function(obj) {
+        // 如果传入的对象本身是obj，直接返回该对象
         if (!_.isObject(obj)) return obj;
+        // 如果是数组，返回数组，否则返回该对象与一个空对象的合成(过滤非对象的参数)
         return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
     };
 
     // Invokes interceptor with the obj, and then returns obj.
     // The primary purpose of this method is to "tap into" a method chain, in
     // order to perform operations on intermediate results within the chain.
+    // 用 object作为参数来调用函数interceptor，然后返回object。
+    // 这种方法的主要意图是作为函数链式调用 的一环, 为了对此对象执行操作并返回对象本身。
     _.tap = function(obj, interceptor) {
+        // 传入一个方法，用改方法调用对象
         interceptor(obj);
+        // 返回对象的结果
         return obj;
     };
 
     // Returns whether an object has a given set of `key:value` pairs.
+    // 告诉你properties中的键和值是否包含在object中。
     _.isMatch = function(object, attrs) {
+        // 获取比较值的键数组、长度
         var keys = _.keys(attrs),
             length = keys.length;
+        // 如果待比较对象各位null，根据比较值返回结果
+        // {}返回true，因为null中没有任何键值对
+        // 其他返回false，因为null中没有任何键值对
         if (object == null) return !length;
+        // 生成一个保存object的新对象
         var obj = Object(object);
+        // 逐一检查键值对与obj中的键值对是否一致
         for (var i = 0; i < length; i++) {
             var key = keys[i];
             if (attrs[key] !== obj[key] || !(key in obj)) return false;
@@ -1425,20 +1478,34 @@
 
 
     // Internal recursive comparison function for `isEqual`.
+    // _.isEqual的基础函数，判读两个对象是否相等，逻辑如下
+    // 1. 直接使用===判断相等性，返回比较结果
+    // 2. 根据不同的[[Class]]类型判断相等性，返回比较结果
+    // 3. 判断是否为数组类型
+    // 4. (如果是对象类型，先比较一下构造函数)
+    // 5. 根据是否为数组类型分别进行数组类型判断和对象类型判断
+    // 6. 数组类型和对象类型判断中存在eq方法的递归调用
+    // 7. 返回比较结果
     var eq = function(a, b, aStack, bStack) {
         // Identical objects are equal. `0 === -0`, but they aren't identical.
-        // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+        // 排除0和-0的情况，0和-0并不相等
         if (a === b) return a !== 0 || 1 / a === 1 / b;
         // A strict comparison is necessary because `null == undefined`.
+        // 排除null和undefined比较的情况
         if (a == null || b == null) return a === b;
         // Unwrap any wrapped objects.
+        // underscore可能会用_对象将变量包裹起来，如果是这种情况需要把被包裹的值提取出来才可以进行下一步判断
         if (a instanceof _) a = a._wrapped;
         if (b instanceof _) b = b._wrapped;
         // Compare `[[Class]]` names.
+        // 根据[[Class]]值进行判断，这种判断能覆盖原始数据类型未被覆盖到的所有剩余情况
+        // 取得a的[[Class]]并和b的[[Class]]先比较一下
         var className = toString.call(a);
         if (className !== toString.call(b)) return false;
+        // 然后通过一个switch (className)语句进行分类判断
         switch (className) {
             // Strings, numbers, regular expressions, dates, and booleans are compared by value.
+            // [object RegExp]和[object String]：它们的判断方式一样，统一转换为字符串后进行严格相等的判断：
             case '[object RegExp]':
                 // RegExps are coerced to strings for comparison (Note: '' + /a/i === '/a/i')
             case '[object String]':
@@ -1448,18 +1515,22 @@
             case '[object Number]':
                 // `NaN`s are equivalent, but non-reflexive.
                 // Object(NaN) is equivalent to NaN
+                // 先考虑特殊情况NaN，a和b都是NaN时它们会不等，但应该把它们看做相等的，因为NaN总是表现出一样的性质，解决办法是判断a和b是否分别为NaN。
+                // 最后再判断一次相等性，同时剔除-0的情况
                 if (+a !== +a) return +b !== +b;
                 // An `egal` comparison is performed for other numeric values.
                 return +a === 0 ? 1 / +a === 1 / b : +a === +b;
             case '[object Date]':
             case '[object Boolean]':
-                // Coerce dates and booleans to numeric primitive values. Dates are compared by their
-                // millisecond representations. Note that invalid dates with millisecond representations
-                // of `NaN` are not equivalent.
+                // [object Date]和[object Boolean]：它们的判断很简单，直接调用===
                 return +a === +b;
         }
 
+        // 纯粹对象和数组类型的判断
+        // 对它们的判断实际上是将它们逐步分解成原始数据类型，然后递归调用eq
         var areArrays = className === '[object Array]';
+        // 根据areArrays的真假走不同的逻辑分支。
+        // 但在此之前，为了简化判断，先要排除一种情况，那就是如果是对象的话，可以先比较它们的构造函数，构造函数不同的话，即使对象内的值相同，两个对象也是不同的
         if (!areArrays) {
             if (typeof a != 'object' || typeof b != 'object') return false;
 
@@ -1478,6 +1549,12 @@
 
         // Initializing stack of traversed objects.
         // It's done here since we only need them for objects and arrays comparison.
+        // 通过构造函数的比较后，即进入具体包含值的比较，后面紧跟的while循环在第一次遍历的时候是不会执行的。
+        // 后面将a和b分别压入堆栈，堆栈的作用是按照顺序存放比较对象的元素值，并递归调用eq方法自身。
+        // 对于a或者b来说，如果某个子元素仍然是对象或者数组，则会将这个子元素继续拆分，直到全部拆分为eq方法前半部分所写的，
+        // 可以比较的“基本单元”为止，一旦有任何一个元素不相等，便会触发一连串的return false。
+        // 至于数组和对象的区别并不是太重要，underscore本身提供的工具函数可以处理数据结构上的差异性，
+        // 本质还是eq方法本身。
         aStack = aStack || [];
         bStack = bStack || [];
         var length = aStack.length;
@@ -1520,36 +1597,44 @@
     };
 
     // Perform a deep comparison to check if two objects are equal.
+    // 比较两者是否相同
     _.isEqual = function(a, b) {
         return eq(a, b);
     };
 
     // Is a given array, string, or object empty?
     // An "empty" object has no enumerable own-properties.
+    // 如果object 不包含任何值(没有可枚举的属性)，返回true
     _.isEmpty = function(obj) {
         if (obj == null) return true;
+        // 如果是类数组，判断length
         if (isArrayLike(obj) && (_.isArray(obj) || _.isString(obj) || _.isArguments(obj))) return obj.length === 0;
+        // 其他判断键的长度
         return _.keys(obj).length === 0;
     };
 
     // Is a given value a DOM element?
+    // 如果object是一个DOM元素，返回true。
     _.isElement = function(obj) {
         return !!(obj && obj.nodeType === 1);
     };
 
     // Is a given value an array?
     // Delegates to ECMA5's native Array.isArray
+    // 判断是否为数组
     _.isArray = nativeIsArray || function(obj) {
         return toString.call(obj) === '[object Array]';
     };
 
     // Is a given variable an object?
+    // 判断是否是个对象
     _.isObject = function(obj) {
         var type = typeof obj;
         return type === 'function' || type === 'object' && !!obj;
     };
 
     // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError.
+    // 更多is判断
     _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'], function(name) {
         _['is' + name] = function(obj) {
             return toString.call(obj) === '[object ' + name + ']';
@@ -1558,6 +1643,7 @@
 
     // Define a fallback version of the method in browsers (ahem, IE < 9), where
     // there isn't any inspectable "Arguments" type.
+    // 如果object是一个参数对象，返回true。
     if (!_.isArguments(arguments)) {
         _.isArguments = function(obj) {
             return _.has(obj, 'callee');
@@ -1566,6 +1652,7 @@
 
     // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
     // IE 11 (#1621), and in Safari 8 (#1929).
+    // 如果object是一个函数（Function），返回true。
     if (typeof /./ != 'function' && typeof Int8Array != 'object') {
         _.isFunction = function(obj) {
             return typeof obj == 'function' || false;
@@ -1573,16 +1660,20 @@
     }
 
     // Is a given object a finite number?
+    // 如果object是一个有限的数字，返回true。
     _.isFinite = function(obj) {
         return isFinite(obj) && !isNaN(parseFloat(obj));
     };
 
     // Is the given value `NaN`? (NaN is the only number which does not equal itself).
+    // 如果object是 NaN，返回true。
+    // 这和原生的isNaN 函数不一样，如果变量是undefined，原生的isNaN 函数也会返回 true 。
     _.isNaN = function(obj) {
         return _.isNumber(obj) && obj !== +obj;
     };
 
     // Is a given value a boolean?
+    // 判断是否为bool值
     _.isBoolean = function(obj) {
         return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
     };
@@ -1599,6 +1690,7 @@
 
     // Shortcut function for checking if an object has a given property directly
     // on itself (in other words, not on a prototype).
+    // 判断对象是否包含给定的键
     _.has = function(obj, key) {
         return obj != null && hasOwnProperty.call(obj, key);
     };
@@ -1608,6 +1700,7 @@
 
     // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
     // previous owner. Returns a reference to the Underscore object.
+    // 放弃Underscore 的控制变量"_"。返回Underscore 对象的引用。
     _.noConflict = function() {
         root._ = previousUnderscore;
         return this;
@@ -1630,7 +1723,9 @@
     _.property = property;
 
     // Generates a function for a given object that returns a given property.
+    // 返回obj的key值
     _.propertyOf = function(obj) {
+        // 闭包
         return obj == null ? function() {} : function(key) {
             return obj[key];
         };
@@ -1654,6 +1749,7 @@
     };
 
     // Return a random integer between min and max (inclusive).
+    // 返回一个随机数
     _.random = function(min, max) {
         if (max == null) {
             max = min;
@@ -1663,6 +1759,7 @@
     };
 
     // A (possibly faster) way to get the current timestamp as an integer.
+    // 返回当前时间
     _.now = Date.now || function() {
         return new Date().getTime();
     };
@@ -1692,11 +1789,14 @@
             return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
         };
     };
+    // 转义HTML字符串，替换&, <, >, ", ', 和 /字符。
     _.escape = createEscaper(escapeMap);
+    // 和escape相反。转义HTML字符串，替换&, &lt;, &gt;, &quot;, &#96;, 和 &#x2F;字符。
     _.unescape = createEscaper(unescapeMap);
 
     // If the value of the named `property` is a function then invoke it with the
     // `object` as context; otherwise, return it.
+    // 如果指定的property 的值是一个函数，那么将在object上下文内调用它;否则，返回它。
     _.result = function(object, property, fallback) {
         var value = object == null ? void 0 : object[property];
         if (value === void 0) {
@@ -1715,6 +1815,7 @@
 
     // By default, Underscore uses ERB-style template delimiters, change the
     // following template settings to use alternative delimiters.
+    // Underscore默认使用标签格式的模板分隔符，改变下面的模板设置项可以使用你自己设置的模板分隔符。
     _.templateSettings = {
         evaluate: /<%([\s\S]+?)%>/g,
         interpolate: /<%=([\s\S]+?)%>/g,
@@ -1724,10 +1825,13 @@
     // When customizing `templateSettings`, if you don't want to define an
     // interpolation, evaluation or escaping regex, we need one that is
     // guaranteed not to match.
+    // 当定制了'templateSettings'设置项后，如果你不想定义interpolation，evaluation或者escaping的正则，  
+    // 我们需要一个保证在某个属性项（evaluate，interpolate，escape）没有的情况下的正则。  
     var noMatch = /(.)^/;
 
     // Certain characters need to be escaped so that they can be put into a
-    // string literal.
+    // string literal.  
+    // 对特定字符进行转码（前面会加上"\"），这样放在Function的字符串字面量的函数体中才能正常运行（类似于正则中我们想要对\符号的匹配一样） 
     var escapes = {
         "'": "'",
         '\\': '\\',
@@ -1737,6 +1841,7 @@
         '\u2029': 'u2029'
     };
 
+    // 获取escapes属性部分的匹配的正则  
     var escaper = /\\|'|\r|\n|\u2028|\u2029/g;
 
     var escapeChar = function(match) {
@@ -1746,12 +1851,23 @@
     // JavaScript micro-templating, similar to John Resig's implementation.
     // Underscore templating handles arbitrary delimiters, preserves whitespace,
     // and correctly escapes quotes within interpolated code.
-    // NB: `oldSettings` only exists for backwards compatibility.
+    // NB: `oldSettings` only exists for backwards compatibility. 
+    // JavaScript mini模板引擎，类似于John Resig的实现。Underscore的模板可以处理任意的定界符，保留空格，并且可以在插入的代码里正确的转义引号。  
+    // 注意：'oldSetting'的存在只是为了向后兼容。  
+    // Underscore模板解析流程：  
+    // 1、准备要对整个字符串进行匹配的正则表达式；  
+    // 2、组装要执行的函数体主要部分（source变量，通过对整个模板进行正则匹配来实现）；  
+    // 3、组装整个函数体执行部分；  
+    // 4、使用Function实例化出一个生成最终字符串的函数（对该函数传入要渲染的参数即可获得最终渲染字符串）；  
+    // 5、提供预编译的source参数，方便调试与错误追踪  
     _.template = function(text, settings, oldSettings) {
         if (!settings && oldSettings) settings = oldSettings;
+        // 使用defaults方法来给settings参数赋默认值（如果evaluate、interpolate、escape任一属性有值则不做覆盖） 
         settings = _.defaults({}, settings, _.templateSettings);
 
         // Combine delimiters into one regular expression via alternation.
+        // 将界定符组合成一个正则  
+        // 用户如果没有设置界定符则以下正则是：/<%-([\s\S]+?)%>|<%=([\s\S]+?)%>|<%([\s\S]+?)%>|$/g  
         var matcher = RegExp([
             (settings.escape || noMatch).source,
             (settings.interpolate || noMatch).source,
@@ -1760,50 +1876,77 @@
 
         // Compile the template source, escaping string literals appropriately.
         var index = 0;
+        // 记录编译成的函数字符串，可通过_.template(tpl).source获取  
         var source = "__p+='";
+        /** 
+            replace()函数的各项参数意义： 
+            1、第一个参数为每次匹配的全文本（$&）。 
+            2、中间参数为子表达式匹配字符串，也就是括号中的东西，个数不限 
+            3、倒数第二个参数为匹配文本字符串的匹配下标位置。 
+            4、最后一个参数表示字符串本身。 
+        */
         text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+            // 将要编译的模板中正则匹配到非分解符部分的加到source上面去，这里做了字符串转义处理  
             source += text.slice(index, offset).replace(escaper, escapeChar);
+            // 将index跳至当前匹配分解符的结束的地方  
             index = offset + match.length;
+            // 界定符内匹配到的内容（TODO:进一步解释）  
 
             if (escape) {
+                // 需要转码的字符串部分的处理  
                 source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
             } else if (interpolate) {
+                // 对象属性部分的处理  
                 source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
             } else if (evaluate) {
+                // 代码执行部分的处理  
                 source += "';\n" + evaluate + "\n__p+='";
             }
 
             // Adobe VMs need the match returned to produce the correct offest.
+            // 将匹配到的内容原样返回（Adobe VMs需要返回match来使得offset能够正常，一般网页并不需要）
             return match;
         });
         source += "';\n";
 
         // If a variable is not specified, place data values in local scope.
+        // 如果没有在第二个参数里指定variable变量，那么将数据值置于局部变量中执行  
         if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
 
+        // 将组装好的source重新组装，成为真正可以执行的js代码字符串。（print相当于等号，但是比=号要方便）  
+        // Array.prototype.join.call(arguments,'');是将所有的参数（如果是对象则调用toString()方法转化为字符串）以''合并在一起  
         source = "var __t,__p='',__j=Array.prototype.join," +
             "print=function(){__p+=__j.call(arguments,'');};\n" +
             source + 'return __p;\n';
 
+        // 防止在没有传settings.variable作为with的作用域的时候，render函数的第一个参数名字为obj（此时render函数格式：function(obj,_) {source}），  
+        // obj为在没有传递setting.variable的时候source代码的作用域  
         try {
+            // underscore的根对象也作为一个变量传入了函数  
+            // Function传参：前面是执行函数时的参数，最后是执行函数体字符串字面量  
             var render = new Function(settings.variable || 'obj', '_', source);
         } catch (e) {
             e.source = source;
             throw e;
         }
 
+        // 传进去的data相当于obj  
         var template = function(data) {
+            // this一般都是指向window  
             return render.call(this, data, _);
         };
 
         // Provide the compiled source as a convenience for precompilation.
+        // 提供编译的source，方便预编译（据官方文档，这么做可以对错误进行跟踪定位）  
         var argument = settings.variable || 'obj';
         template.source = 'function(' + argument + '){\n' + source + '}';
+        // 将函数返回（对函数传入要渲染的数据即可获得最终渲染字符串）  
 
         return template;
     };
 
     // Add a "chain" function. Start chaining a wrapped Underscore object.
+    // 返回一个封装的对象. 在封装的对象上调用方法会返回封装的对象本身, 直道 value 方法调用为止.
     _.chain = function(obj) {
         var instance = _(obj);
         instance._chain = true;
