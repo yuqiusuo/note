@@ -74,6 +74,11 @@
   * 字符串、数字、布尔值和null的JSON.stringify(...)规则与ToString基本相同
   * 如果传递给JSON.stringify(...)的对象中定义了toJSON()方法，那么该方法会在字符串化前调用，以便将对象转换为安全的JSON值
 
+* JS中的值可以分为以下两类：
+
+  * 可以被强制类型转换为false的值（undefined/null/false/+0/-0/NaN/""）
+  * 其他（被强制类型转换为true的值）
+
 
 
 
