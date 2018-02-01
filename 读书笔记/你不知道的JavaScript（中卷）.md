@@ -79,6 +79,67 @@
   * 可以被强制类型转换为false的值（undefined/null/false/+0/-0/NaN/""）
   * 其他（被强制类型转换为true的值）
 
+* ES5 Date提供了新方法：`Date.now()`
+
+  ```javascript
+  // Date.now() polyfill
+  if(!Date.now){
+    Date.now = function(){
+      return +new Date();
+    }
+  }
+  ```
+
+* `>= 0`和`== -1`这样的写法不是很好，称为抽象渗漏，意思是在代码中暴露了底层的实现细节，这里是指用-1作为失败时的返回值，这些细节应该被屏蔽掉
+
+  ```javascript
+  var a = "hello";
+
+  // bad
+  if(a.indexOf('lo')){
+    	console.log(true);
+  }	// true
+
+  if(a.indexOf('ol')){
+    	console.log(false);
+  }	// false
+
+  // good
+  if(~a.indexOf("lo")){
+    	console.log(true);
+  }	// true
+
+  if(!a.indexOf("ol")){
+    	console.log(false);
+  }	// false
+
+  ```
+
+* ~~可以用来截除数字值的小数部分，第一个~执行ToInt并翻转字位，然后第二个~再一次反转字位，即将所有字位翻转回原值，最后得到的仍然是ToInt的结果
+
+  * 只适用于32位数字
+  * 对负数的处理和Math.floor()不同
+
+  ```javascript
+  Math.floor(-49.6);	// -50
+  ~~-49.6	// -49
+  ```
+
+* 数字字符串的解析和转换有明显的区别。解析允许字符串中含有非数字字符，解析按从左到右的顺序，如果遇到非数字字符就停止。而转换不允许出现非数字字符，否则会失败并返回NaN
+
+  ```javascript
+  var a = "42";
+  var b = "42px";
+
+  Number(a);	// 42
+  parseInt(a);	// 42
+
+  Number(b);	// NaN
+  parseInt(b);	// 42
+  ```
+
+  ​
+
 
 
 
