@@ -166,9 +166,48 @@
     a && foo();	// 42
     ```
 
-    ​
+* ==允许在相等比较中进行强制类型转换，而===不允许（他俩不存在性能差距问题）。
+
+  * NaN不等于NaN，+0等于-0；
+
+  * ```javascript
+    var a = "42";
+    var b = true;
+    var c = false;
+
+    a == b;	// false
+    a == c;	// false
+
+    // 如果b是布尔类型，返回ToNumber(b) == a的结果，变成 1 == 42，所以是false，同理0 == 42；
+    ```
+
+  * 建议无论什么情况下都不要使用 == true 和 == false；
+
+    ```javascript
+    var a == "42";
+
+    // 建议方法
+    if(!!a) {
+        // ...
+    }
+    ```
+
+  * ```javascript
+    var a = null;
+    var b;
+
+    a == b;	// true
+    a == null; 	// true
+    b == null;	// true
+
+    a == false;	// false
+    b == false;	// false
+    a == "";	// false
+    b == "";	// false
+    a == 0;		// false
+    b == 0;		// false
+    ```
 
 
-
-
+#### 五、语法
 
