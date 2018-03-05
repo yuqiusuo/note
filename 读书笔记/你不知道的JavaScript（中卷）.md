@@ -246,4 +246,87 @@
     foo(10, null);		// 2 10 null 10 null
     ```
 
-    ​
+* try...finally
+
+  * finally中的代码总会在try之后执行，如果有catch的话，则在catch之后执行。可以将finally中的代码看做一个回调函数，无论出现什么情况一定会被调用；
+
+  * 如果finally中抛出异常，函数就会在此处终止；
+
+  * finally中的return会覆盖try和catch中return的返回值
+
+    ```javascript
+    function foo() {
+        try{
+    		return 42;
+        } finally {
+          	// 没有返回语句，所以没有覆盖
+        }
+    }
+
+    function bar() {
+        try {
+    		return 42;
+        } finally {
+          	return;	// 覆盖前面的return 42;
+        }
+    }
+
+    function baz() {
+        try {
+          	return 42;
+        } finally {
+          	return "hello";	// 覆盖前面的return 42;
+        }
+    }
+
+    foo();	// 42
+    bar();	// undefined
+    baz();	// hello
+    ```
+
+* ​
+
+  * switch语句中，case表达式与变量的匹配算法与===相同；
+
+  * switch中true和true之间仍然是严格相等比较。即如果case表达式的结果为真值，但不是严格意义上的true，则条件不成立。
+
+    ```javascript
+    var a = "hello world";
+    var b = 10;
+
+    switch (true) {
+      	case (a || b == 10):
+        	break;	// 永远执行不到这里
+        defaule: 
+        	console.log('Oops');
+    }	// Oops
+    // 因为(a || b == 10)的结果是"hello world"而非true，所以严格相等比较不成立
+    ```
+
+  * arguments和arguments.caller均已被废止，所以尽量不使用它们，也不要使用它们的别名；
+
+  * 由于浏览器演进的历史遗留问题，在创建带有id属性的DOM元素时也会创建同名的全局变量。
+
+    ```javascript
+    // <div id="foo"></div>
+
+    if (type foo == "undefined") {
+      	foo = 42;	// 永远也不会执行
+    }
+
+    console.log(foo);	// HTML 元素
+    ```
+
+  * 不要扩展原生原型，因为你永远不能确信代码在运行环境中不会有冲突，有太多的情况可能会扩展原生类型（JS更新、插件扩展等）；
+
+  * 内联JS代码中不可以出现`</script>`字符串，一旦出现即视为代码块结束；
+
+  * JS的一些限制（需要注意的地方）
+
+    * 字符串中允许的最大字符数（并非只是针对字符串值）
+    * 可以作为参数传递到函数中的数据大小（也称栈大小，以字节为单位）
+    * 函数声明中的参数个数
+    * 未经优化的调用栈（例如递归）的最大层数，即函数调用链的最大长度
+    * JS程序以阻塞方式在浏览器中运行的最长时间（秒）
+    * 变量名的最大长度
+
