@@ -211,3 +211,39 @@
 
 #### 五、语法
 
+* 语句和表达式
+
+  * 语句都有一个结果值；
+  * 不要使用`eval`；
+  * `var a = b = 42;`不会对变量b进行声明；
+  * 注意让代码更简洁；
+
+* 运算符优先级
+
+  * `&&`优先级高于`||`；
+
+* 自动分号
+
+  * 只在换行符处起作用，不会在代码行的中间插入分号
+  * 应当在需要的地方加上分号，不要省略
+
+* 错误
+
+  * 变量应该先被初始化
+
+  * ES6中，对于参数默认值而言，参数被省略或者被赋值为undefined效果都一样，都是取该参数的默认值，但是某些情况下，他们之间会有区别的：
+
+    ```javascript
+    function foo( a = 42, b = a + 1 ) {
+        console.log(
+        	arguments.length, a, b, arguments[0], arguments[1]
+        );
+    }
+
+    foo();				// 0 42 43 undefined undefined
+    foo(10);			// 1 10 11 10 undefined
+    foo(10, undefined);	// 2 10 11 10 undefined
+    foo(10, null);		// 2 10 null 10 null
+    ```
+
+    ​
