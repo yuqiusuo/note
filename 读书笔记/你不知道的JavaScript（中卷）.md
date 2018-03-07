@@ -336,6 +336,48 @@
 #### 六、异步：现在与将来
 
 * 严格来说，`setTimeout(..0)`并不直接把项目插入到事件循环队列。定时器会在有机会的时候插入事件。举例来说，两个连续的`setTimeout(..0)`调用不能保证会严格按照调用顺序处理，说一个种情况都有可能出现。尽管他们使用方便，但是并没有直接的方法可以适应所有环境来确保异步事件的顺序。
+
 * 实际上，JS程序总是至少分为两块，一块现在运行，下一块将来运行，以响应某个事件。尽管程序是一块一块执行的，但是所有的这些块共享对程序作用域和状态的访问，所以对状态的修改都是在之前积累的修改上进行的；
+
 * 尽量少用嵌套，防止生成回调地狱；
+
 * 回调表达程序异步和管理并发的两个主要缺陷：缺乏顺序性和可信任性；
+
+* Promise.all([ .. ])接受一个promise数组并返回一个新的promise，这个新promise等待数组中的所有promise完成；
+
+* Promise的链式函数
+
+  ```javascript
+  var p = Promise.resolve( 21 );
+
+  p.then(function(v) {
+      console.log(v);	// 21
+      return new Promise(function(resolve, reject) {
+          resolve( v * 2 );
+      })
+  }).then(function(v) {
+      console.log(v);	// 42
+  })
+  ```
+
+  * 调用Promise的then(...)会自动创建一个新的Promise从调用返回；
+  * 在完成或拒绝处理函数内部，如果返回一个值或抛出一个异常，新返回的（可链接的）Promise就相应的决议；
+  * 如果完成或拒绝处理函数返回一个Promise，它将会被展开，这样一来，不管它的决议是什么，都会成为当前then(...)返回的链接Promise的决议值；
+  * 决议（resolve）、完成（fulfill）、拒绝（reject）
+
+* Promise.all：Promise.all(`[...]`) 方法需要一个参数（数组），通常有Promise组成，也可以是`thenable`或者立即值，返回一个 Promise。当数组参数中所有的 Promise 都返回完成(resolve), 或者当参数不包含 Promise 时, 该方法返回完成(resolve),。当有一个 Promise 返回拒绝(reject)时, 该方法返回拒绝(reject)；
+
+* Promise.race([...])：接受单个参数数组。返回数组中第一个执行完成的结果；
+
+* Promise.none([...])：所有的Promise都要被拒绝，即拒绝转换为完成值；
+
+* Promise.any([...])：只需要完成一个而不是全部；
+
+* Promise.first([...])：只要第一个Promise完成，他就会忽略后续的任何拒绝和完成。如果所有的promise都拒绝的话，他不会拒绝，只会挂住；
+
+* Promise.last([...])：只有最后一个完成，他就会忽略后续的任何拒绝和完成；
+
+* Promise的局限性：
+
+  * 顺序错误处理：由于一个Promise链仅仅是连接到一起的成员Promise，没有把整个链标识为一个个体的实体，这意味着没有外部方法可以用于观察可能发生的错误，则链中任何地方的错误都会在链中一直传播下去，知道被查看；
+  * 单一值：Promise只能有一个完成值或一个拒绝理由。
