@@ -381,3 +381,52 @@
 
   * 顺序错误处理：由于一个Promise链仅仅是连接到一起的成员Promise，没有把整个链标识为一个个体的实体，这意味着没有外部方法可以用于观察可能发生的错误，则链中任何地方的错误都会在链中一直传播下去，知道被查看；
   * 单一值：Promise只能有一个完成值或一个拒绝理由。
+
+
+
+#### 生成器
+
+*   生成器是一类特殊的函数，可以一次或多次启动和停止，并不一定非得要完成。
+
+    ```javascript
+    var x = 1;
+    function *foo() {
+        x++;
+        yield;	// 暂停
+        console.log("x:", x);
+    }
+
+    function bar() {
+        x++;
+    }
+
+    // 构造一个迭代器it来控制这个生成器，此处并未执行生成器*foo()，只是构造
+    var it = foo();
+
+    it.next();	// 启动foo()，并运行了*foo()第一行的x++
+    x;			// 2；此时*foo()在yield语句处暂停，x为2
+    bar();		// 调用bar()，通过x++再次递增x
+    x;			//	3；此时x为3
+    it.next();	// x: 3	最后的it.next()调用从暂停处恢复了生成器*foo()的执行，并打印信息
+    ```
+
+*   生成器仍然是一个函数，仍然接受参数，也能够返回值；
+
+*   迭代消息传递
+
+    ```javascript
+    function *foo(x) {
+        var y = x * (yield);
+        return y;
+    }
+
+    var it = foo(6);
+
+    it.next();
+    var res = it.next(7);
+
+    res.value;	// 42
+    ```
+
+    ​
+
